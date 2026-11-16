@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090d18">
+<meta name="description" content="Tableau de bord statistique pour analyser un historique de multiplicateurs Aviator.">
+<title>Aviator Lens | Analyse statistique</title>
+<style>
+:root{color-scheme:dark;--bg:#090d18;--panel:#111827;--panel2:#0d1422;--line:#243047;--muted:#91a0b8;--text:#edf3ff;--cyan:#54e0d0;--blue:#6da7ff;--pink:#ff6f91;--gold:#ffc66d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(900px 500px at 85% -10%,#18324a 0%,transparent 60%),var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1100px;margin:auto;padding:22px 16px 48px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}.brand{display:flex;align-items:center;gap:11px}.mark{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--cyan),var(--blue));display:grid;place-items:center;color:#06111b;font-weight:950;font-size:20px}.brand strong{display:block;letter-spacing:.08em;font-size:14px}.brand small{color:var(--muted)}.status{font-size:12px;color:var(--gold);border:1px solid #59472d;border-radius:99px;padding:6px 10px}
+h1{font-size:clamp(26px,5vw,40px);line-height:1.1;margin:0 0 9px;letter-spacing:-.04em} .intro{color:var(--muted);max-width:680px;margin:0 0 22px}
+.notice{background:#211b12;border:1px solid #58452b;color:#f5d6a2;border-radius:14px;padding:12px 14px;font-size:13px;margin:18px 0 20px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.card{background:linear-gradient(180deg,#141e2e,#101725);border:1px solid var(--line);border-radius:17px;padding:16px;min-width:0}.metric span{color:var(--muted);font-size:12px}.metric b{display:block;font-size:26px;letter-spacing:-.03em;margin-top:5px}.metric small{color:var(--muted);font-size:11px}
+.layout{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:14px}.card h2{font-size:15px;margin:0 0 13px}.muted{color:var(--muted)}.bars{display:flex;align-items:end;gap:8px;height:165px;padding:10px 2px 0;border-bottom:1px solid var(--line)}.barwrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;height:100%;justify-content:end}.bar{width:100%;max-width:42px;border-radius:7px 7px 2px 2px;background:linear-gradient(180deg,var(--cyan),#237b91);min-height:3px}.barwrap small{font-size:10px;color:var(--muted)}
+.pills{display:flex;flex-wrap:wrap;gap:8px}.pill{border:1px solid var(--line);background:#0c1421;padding:8px 10px;border-radius:10px;font-size:12px}.pill b{color:var(--cyan)}
+textarea{width:100%;min-height:110px;resize:vertical;background:#09111d;border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--text);font:13px/1.5 ui-monospace,monospace;outline:none}textarea:focus,input:focus{border-color:var(--cyan)}button,.filebtn{border:0;border-radius:11px;padding:11px 14px;font-weight:750;cursor:pointer;background:var(--cyan);color:#06131b}button.secondary{background:#202c40;color:var(--text);border:1px solid var(--line)}button:active{transform:scale(.98)}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.filebtn{display:inline-flex;align-items:center;background:#202c40;color:var(--text);border:1px solid var(--line);font-size:13px}input[type=file]{display:none}
+.results{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.result{font-weight:800;font-size:12px;padding:7px 9px;border-radius:8px;background:#17263a;border:1px solid #2a405d}.result.low{color:#ff9baa}.result.mid{color:#ffd17c}.result.high{color:#6ce4d5}
+.table{width:100%;border-collapse:collapse;font-size:13px}.table td{padding:9px 3px;border-bottom:1px solid var(--line)}.table td:last-child{text-align:right;font-weight:700}
+.footer{color:var(--muted);font-size:11px;text-align:center;margin-top:22px}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.layout{grid-template-columns:1fr}.wrap{padding:17px 13px 36px}.metric b{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="brand"><div class="mark">A</div><div><strong>AVIATOR LENS</strong><small>Analyse statistique indépendante</small></div></div><div class="status" id="mode">MODE DÉMO</div></header>
+<h1>Les chiffres, pas les promesses.</h1>
+<p class="intro">Explore les multiplicateurs passés, leur répartition et leurs fréquences. Importe ton historique pour remplacer les données de démonstration.</p>
+<div class="notice"><b>À savoir :</b> Aviator est un jeu aléatoire. Les statistiques historiques ne permettent pas de connaître le prochain multiplicateur ni de garantir un gain. Cet outil n'est pas affilié à 1xBet.</div>
+<section class="grid" aria-label="Indicateurs">
+<div class="card metric"><span>Rounds analysés</span><b id="count">30</b><small>dans l'historique chargé</small></div>
+<div class="card metric"><span>Moyenne observée</span><b id="average">2,00×</b><small>moyenne arithmétique</small></div>
+<div class="card metric"><span>Médiane</span><b id="median">1,50×</b><small>valeur centrale</small></div>
+<div class="card metric"><span>Dernier multiplicateur</span><b id="latest">—</b><small>dernier élément importé</small></div>
+</section>
+<div class="layout">
+<section class="card"><h2>Répartition des multiplicateurs</h2><div class="bars" id="chart"></div><p class="muted" style="font-size:11px;margin:10px 0 0">Fréquence constatée dans l'échantillon chargé, pas prévision du prochain round.</p></section>
+<section class="card"><h2>Fréquences observées</h2><div class="pills" id="frequencies"></div><table class="table" style="margin-top:12px"><tbody id="distribution"></tbody></table></section>
+</div>
+<section class="card" style="margin-top:14px"><h2>Importer un historique</h2><p class="muted" style="font-size:13px;margin-top:-5px">Colle les multiplicateurs séparés par des espaces, virgules ou retours à la ligne. Exemple : <code>1.12, 2.45, 1.00, 5.20</code>. Les fichiers CSV ou TXT sont acceptés.</p>
+<textarea id="values" placeholder="1.12, 2.45, 1.00, 5.20, 1.76..."></textarea>
+<div class="actions"><button id="analyze">Analyser l'historique</button><label class="filebtn" for="file">Importer CSV / TXT</label><input id="file" type="file" accept=".csv,.txt,text/plain,text/csv"><button class="secondary" id="demo">Revoir la démo</button><button class="secondary" id="clear">Effacer les données</button></div>
+<p id="message" class="muted" role="status" style="font-size:12px;margin-bottom:0">Les données importées restent dans ce navigateur uniquement.</p>
+</section>
+<section class="card" style="margin-top:14px"><h2>Historique chargé · 20 derniers rounds</h2><div class="results" id="recent"></div></section>
+<p class="footer">Aviator Lens · Prototype indépendant · Aucune connexion à un compte de jeu · Joue de façon responsable.</p>
+</div>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const demo=[1.12,1.45,2.31,1.03,4.82,1.67,1.21,8.44,1.09,2.05,1.54,3.17,1.01,1.88,6.23,1.32,2.74,1.16,1.92,12.6,1.08,3.48,1.41,2.12,1.02,5.61,1.73,1.28,2.96,1.11];
+let values=demo.slice();
+const fmt=n=>Number(n).toFixed(2).replace(".",",")+"×";
+function render(){
+const sorted=[...values].sort((a,b)=>a-b),sum=values.reduce((a,b)=>a+b,0),med=sorted.length?(sorted.length%2?sorted[(sorted.length-1)/2]:(sorted[sorted.length/2-1]+sorted[sorted.length/2])/2):0;
+$("count").textContent=values.length;$("average").textContent=fmt(sum/values.length);$("median").textContent=fmt(med);$("latest").textContent=fmt(values[values.length-1]); 
+const ranges=[{label:"1,00–1,49×",test:x=>x<1.5},{label:"1,50–1,99×",test:x=>x>=1.5&&x<2},{label:"2,00–4,99×",test:x=>x>=2&&x<5},{label:"5,00× et +",test:x=>x>=5}];
+const counts=ranges.map(r=>values.filter(r.test).length),max=Math.max(1,...counts);
+$("chart").innerHTML=ranges.map((r,i)=>'<div class="barwrap"><div class="bar" style="height:'+Math.max(3,counts[i]/max*100)+'%"></div><small>'+Math.round(counts[i]/values.length*100)+'%</small><small>'+r.label+'</small></div>').join("");
+$("frequencies").innerHTML=[1.5,2,5,10].map(t=>{const n=values.filter(v=>v>=t).length;return '<div class="pill">≥ '+String(t).replace(".",",")+'× <b>'+Math.round(n/values.length*100)+'%</b></div>'}).join("");
+$("distribution").innerHTML=ranges.map((r,i)=>'<tr><td>'+r.label+'</td><td>'+counts[i]+' rounds · '+(counts[i]/values.length*100).toFixed(1).replace(".",",")+'%</td></tr>').join("");
+$("recent").innerHTML=values.slice(-20).reverse().map(v=>'<span class="result '+(v<1.5?'low':v<5?'mid':'high')+'">'+fmt(v)+'</span>').join("");
+}
+function parse(raw){return raw.replace(/\r/g," ").split(/[\s,;]+/).map(s=>s.trim().replace(",",".")).filter(Boolean).map(Number).filter(n=>Number.isFinite(n)&&n>=1&&n<=100000)}
+function load(arr,source){if(!arr.length){$("message").textContent="Aucun multiplicateur valide trouvé. Vérifie le format (ex. 1.25).";return}values=arr;$("mode").textContent=source;$("values").value=arr.join(", ");try{localStorage.setItem("aviatorLensHistory",JSON.stringify(arr))}catch(e){}render();$("message").textContent=arr.length+" multiplicateur(s) chargé(s). Analyse descriptive uniquement."}
+$("analyze").addEventListener("click",()=>load(parse($("values").value),"HISTORIQUE IMPORTÉ"));
+$("demo").addEventListener("click",()=>{try{localStorage.removeItem("aviatorLensHistory")}catch(e){}load(demo.slice(),"MODE DÉMO")});
+$("clear").addEventListener("click",()=>{values=[1];$("values").value="";$("mode").textContent="VIDE";try{localStorage.removeItem("aviatorLensHistory")}catch(e){}values=[];$("count").textContent="0";$("average").textContent="—";$("median").textContent="—";$("latest").textContent="—";$("chart").innerHTML="";$("frequencies").innerHTML="";$("distribution").innerHTML="";$("recent").innerHTML="";$("message").textContent="Historique effacé de ce navigateur."});
+$("file").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;const raw=await f.text();$("values").value=raw;load(parse(raw),"FICHIER IMPORTÉ");e.target.value=""});
+try{const saved=JSON.parse(localStorage.getItem("aviatorLensHistory")||"null");if(Array.isArray(saved)&&saved.length){values=saved;$("mode").textContent="HISTORIQUE LOCAL";$("values").value=saved.join(", ")} }catch(e){}
+render();
+})();
+</script>
+</body>
+</html>
