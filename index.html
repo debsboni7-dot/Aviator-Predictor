@@ -106,7 +106,7 @@ function load(arr,source){
  try{localStorage.setItem("aviatorLensHistory",JSON.stringify(arr))}catch(e){}
  render();$("message").textContent=arr.length+" multiplicateur(s) chargé(s). Analyse descriptive uniquement.";
 }
-$("viewToggle").addEventListener("click",()=>{const active=document.body.classList.toggle("view-mode");$("viewToggle").textContent=active?"Accueil":"Voir";});
+$("viewToggle").addEventListener("click",()=>{const active=$("viewScreen").style.display!=="flex";$("dashboard").style.display=active?"none":"block";$("viewScreen").style.display=active?"flex":"none";$("viewToggle").textContent=active?"Accueil":"Voir";});
 $("analyze").addEventListener("click",()=>load(parse($("values").value),"HISTORIQUE IMPORTÉ"));
 $("demo").addEventListener("click",()=>{try{localStorage.removeItem("aviatorLensHistory")}catch(e){}load(demo.slice(),"MODE DÉMO")});
 $("clear").addEventListener("click",()=>{values=[];$("values").value="";$("mode").textContent="VIDE";try{localStorage.removeItem("aviatorLensHistory")}catch(e){}render();$("message").textContent="Historique effacé de ce navigateur."});
