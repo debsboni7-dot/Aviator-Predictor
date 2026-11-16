@@ -38,9 +38,11 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#09111d;border:1
 <section class="card"><h2>Répartition des multiplicateurs</h2><div class="bars" id="chart"></div><p class="muted" style="font-size:11px;margin:10px 0 0">Fréquence constatée dans l'échantillon chargé, pas prévision du prochain round.</p></section>
 <section class="card"><h2>Fréquences observées</h2><div class="pills" id="frequencies"></div><table class="table" style="margin-top:12px"><tbody id="distribution"></tbody></table></section>
 </div>
+<section class="card" style="margin-top:14px"><h2>Évolution des 30 derniers rounds</h2><div id="trend" style="width:100%;overflow:hidden"></div><p class="muted" style="font-size:11px;margin:8px 0 0">Chaque point représente un round importé. Le graphique décrit le passé et ne prédit pas la suite.</p></section>
+<section class="card" style="margin-top:14px"><h2>Repères complémentaires</h2><div class="pills" id="extras"></div></section>
 <section class="card" style="margin-top:14px"><h2>Importer un historique</h2><p class="muted" style="font-size:13px;margin-top:-5px">Colle les multiplicateurs séparés par des espaces, virgules ou retours à la ligne. Exemple : <code>1.12, 2.45, 1.00, 5.20</code>. Les fichiers CSV ou TXT sont acceptés.</p>
 <textarea id="values" placeholder="1.12, 2.45, 1.00, 5.20, 1.76..."></textarea>
-<div class="actions"><button id="analyze">Analyser l'historique</button><label class="filebtn" for="file">Importer CSV / TXT</label><input id="file" type="file" accept=".csv,.txt,text/plain,text/csv"><button class="secondary" id="demo">Revoir la démo</button><button class="secondary" id="clear">Effacer les données</button></div>
+<div class="actions"><button id="analyze">Analyser l'historique</button><label class="filebtn" for="file">Importer CSV / TXT</label><input id="file" type="file" accept=".csv,.txt,text/plain,text/csv"><button class="secondary" id="demo">Revoir la démo</button><button class="secondary" id="export">Exporter CSV</button><button class="secondary" id="clear">Effacer les données</button></div>
 <p id="message" class="muted" role="status" style="font-size:12px;margin-bottom:0">Les données importées restent dans ce navigateur uniquement.</p>
 </section>
 <section class="card" style="margin-top:14px"><h2>Historique chargé · 20 derniers rounds</h2><div class="results" id="recent"></div></section>
@@ -52,23 +54,49 @@ const $=id=>document.getElementById(id);
 const demo=[1.12,1.45,2.31,1.03,4.82,1.67,1.21,8.44,1.09,2.05,1.54,3.17,1.01,1.88,6.23,1.32,2.74,1.16,1.92,12.6,1.08,3.48,1.41,2.12,1.02,5.61,1.73,1.28,2.96,1.11];
 let values=demo.slice();
 const fmt=n=>Number(n).toFixed(2).replace(".",",")+"×";
+const pct=n=>values.length?(n/values.length*100).toFixed(1).replace(".",",")+"%":"—";
 function render(){
-const sorted=[...values].sort((a,b)=>a-b),sum=values.reduce((a,b)=>a+b,0),med=sorted.length?(sorted.length%2?sorted[(sorted.length-1)/2]:(sorted[sorted.length/2-1]+sorted[sorted.length/2])/2):0;
-$("count").textContent=values.length;$("average").textContent=fmt(sum/values.length);$("median").textContent=fmt(med);$("latest").textContent=fmt(values[values.length-1]); 
-const ranges=[{label:"1,00–1,49×",test:x=>x<1.5},{label:"1,50–1,99×",test:x=>x>=1.5&&x<2},{label:"2,00–4,99×",test:x=>x>=2&&x<5},{label:"5,00× et +",test:x=>x>=5}];
-const counts=ranges.map(r=>values.filter(r.test).length),max=Math.max(1,...counts);
-$("chart").innerHTML=ranges.map((r,i)=>'<div class="barwrap"><div class="bar" style="height:'+Math.max(3,counts[i]/max*100)+'%"></div><small>'+Math.round(counts[i]/values.length*100)+'%</small><small>'+r.label+'</small></div>').join("");
-$("frequencies").innerHTML=[1.5,2,5,10].map(t=>{const n=values.filter(v=>v>=t).length;return '<div class="pill">≥ '+String(t).replace(".",",")+'× <b>'+Math.round(n/values.length*100)+'%</b></div>'}).join("");
-$("distribution").innerHTML=ranges.map((r,i)=>'<tr><td>'+r.label+'</td><td>'+counts[i]+' rounds · '+(counts[i]/values.length*100).toFixed(1).replace(".",",")+'%</td></tr>').join("");
-$("recent").innerHTML=values.slice(-20).reverse().map(v=>'<span class="result '+(v<1.5?'low':v<5?'mid':'high')+'">'+fmt(v)+'</span>').join("");
+ const n=values.length;
+ if(!n){
+  ["count"].forEach(id=>$(id).textContent="0");
+  ["average","median","latest"].forEach(id=>$(id).textContent="—");
+  ["chart","frequencies","distribution","recent","trend","extras"].forEach(id=>$(id).innerHTML="");
+  return;
+ }
+ const sorted=[...values].sort((a,b)=>a-b),sum=values.reduce((a,b)=>a+b,0);
+ const med=n%2?sorted[(n-1)/2]:(sorted[n/2-1]+sorted[n/2])/2;
+ const percentile=p=>sorted[Math.min(n-1,Math.ceil(p*n)-1)];
+ $("count").textContent=n;$("average").textContent=fmt(sum/n);$("median").textContent=fmt(med);$("latest").textContent=fmt(values[n-1]);
+ const ranges=[{label:"1,00–1,49×",test:x=>x<1.5},{label:"1,50–1,99×",test:x=>x>=1.5&&x<2},{label:"2,00–4,99×",test:x=>x>=2&&x<5},{label:"5,00× et +",test:x=>x>=5}];
+ const counts=ranges.map(r=>values.filter(r.test).length),max=Math.max(1,...counts);
+ $("chart").innerHTML=ranges.map((r,i)=>'<div class="barwrap"><div class="bar" style="height:'+Math.max(3,counts[i]/max*100)+'%"></div><small>'+pct(counts[i])+'</small><small>'+r.label+'</small></div>').join("");
+ $("frequencies").innerHTML=[1.5,2,5,10].map(t=>{const c=values.filter(v=>v>=t).length;return '<div class="pill">≥ '+String(t).replace(".",",")+'× <b>'+pct(c)+'</b></div>'}).join("");
+ $("distribution").innerHTML=ranges.map((r,i)=>'<tr><td>'+r.label+'</td><td>'+counts[i]+' rounds · '+pct(counts[i])+'</td></tr>').join("");
+ $("recent").innerHTML=values.slice(-20).reverse().map(v=>'<span class="result '+(v<1.5?'low':v<5?'mid':'high')+'">'+fmt(v)+'</span>').join("");
+ const series=values.slice(-30),w=640,h=170,pad=24,lo=Math.min(1,...series),hi=Math.max(2,...series),span=Math.max(.1,hi-lo);
+ const pts=series.map((v,i)=>({x:pad+(series.length===1?0:i/(series.length-1))*(w-2*pad),y:h-pad-((v-lo)/span)*(h-2*pad),v}));
+ const poly=pts.map(p=>p.x.toFixed(1)+","+p.y.toFixed(1)).join(" ");
+ const circles=pts.map((p,i)=>'<circle cx="'+p.x+'" cy="'+p.y+'" r="3.5" fill="'+(p.v<1.5?'#ff6f91':p.v<5?'#ffc66d':'#54e0d0')+'"><title>Round '+(n-series.length+i+1)+': '+fmt(p.v)+'</title></circle>').join("");
+ $("trend").innerHTML='<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Évolution des multiplicateurs" style="width:100%;height:auto"><line x1="'+pad+'" y1="'+(h-pad)+'" x2="'+(w-pad)+'" y2="'+(h-pad)+'" stroke="#34435b"/><line x1="'+pad+'" y1="'+pad+'" x2="'+pad+'" y2="'+(h-pad)+'" stroke="#34435b"/><polyline points="'+poly+'" fill="none" stroke="#54e0d0" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+circles+'<text x="'+pad+'" y="13" fill="#91a0b8" font-size="10">'+fmt(hi)+'</text><text x="'+pad+'" y="'+(h-5)+'" fill="#91a0b8" font-size="10">'+fmt(lo)+'</text><text x="'+(w-pad)+'" y="'+(h-5)+'" fill="#91a0b8" font-size="10" text-anchor="end">Rounds récents →</text></svg>';
+ let streak=0;for(let i=n-1;i>=0&&values[i]<1.5;i--)streak++;
+ $("extras").innerHTML='<div class="pill">Minimum <b>'+fmt(sorted[0])+'</b></div><div class="pill">Maximum <b>'+fmt(sorted[n-1])+'</b></div><div class="pill">P75 <b>'+fmt(percentile(.75))+'</b></div><div class="pill">Rounds ≥ 2× <b>'+pct(values.filter(v=>v>=2).length)+'</b></div><div class="pill">Série actuelle sous 1,5× <b>'+streak+'</b></div>';
 }
-function parse(raw){return raw.replace(/\r/g," ").split(/[\s,;]+/).map(s=>s.trim().replace(",",".")).filter(Boolean).map(Number).filter(n=>Number.isFinite(n)&&n>=1&&n<=100000)}
-function load(arr,source){if(!arr.length){$("message").textContent="Aucun multiplicateur valide trouvé. Vérifie le format (ex. 1.25).";return}values=arr;$("mode").textContent=source;$("values").value=arr.join(", ");try{localStorage.setItem("aviatorLensHistory",JSON.stringify(arr))}catch(e){}render();$("message").textContent=arr.length+" multiplicateur(s) chargé(s). Analyse descriptive uniquement."}
+function parse(raw){
+ const tokens=raw.replace(/\r/g," ").split(/[\s;]+/).flatMap(x=>x.split(",")).map(s=>s.trim().replace(",","."));
+ return tokens.filter(Boolean).map(Number).filter(n=>Number.isFinite(n)&&n>=1&&n<=100000);
+}
+function load(arr,source){
+ if(!arr.length){$("message").textContent="Aucun multiplicateur valide trouvé. Exemple accepté : 1.25  ou  1.25, 2.40";return}
+ values=arr;$("mode").textContent=source;$("values").value=arr.join(", ");
+ try{localStorage.setItem("aviatorLensHistory",JSON.stringify(arr))}catch(e){}
+ render();$("message").textContent=arr.length+" multiplicateur(s) chargé(s). Analyse descriptive uniquement.";
+}
 $("analyze").addEventListener("click",()=>load(parse($("values").value),"HISTORIQUE IMPORTÉ"));
 $("demo").addEventListener("click",()=>{try{localStorage.removeItem("aviatorLensHistory")}catch(e){}load(demo.slice(),"MODE DÉMO")});
-$("clear").addEventListener("click",()=>{values=[1];$("values").value="";$("mode").textContent="VIDE";try{localStorage.removeItem("aviatorLensHistory")}catch(e){}values=[];$("count").textContent="0";$("average").textContent="—";$("median").textContent="—";$("latest").textContent="—";$("chart").innerHTML="";$("frequencies").innerHTML="";$("distribution").innerHTML="";$("recent").innerHTML="";$("message").textContent="Historique effacé de ce navigateur."});
-$("file").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;const raw=await f.text();$("values").value=raw;load(parse(raw),"FICHIER IMPORTÉ");e.target.value=""});
-try{const saved=JSON.parse(localStorage.getItem("aviatorLensHistory")||"null");if(Array.isArray(saved)&&saved.length){values=saved;$("mode").textContent="HISTORIQUE LOCAL";$("values").value=saved.join(", ")} }catch(e){}
+$("clear").addEventListener("click",()=>{values=[];$("values").value="";$("mode").textContent="VIDE";try{localStorage.removeItem("aviatorLensHistory")}catch(e){}render();$("message").textContent="Historique effacé de ce navigateur."});
+$("file").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{$("values").value=await f.text();load(parse($("values").value),"FICHIER IMPORTÉ")}catch(err){$("message").textContent="Impossible de lire ce fichier."}e.target.value=""});
+$("export").addEventListener("click",()=>{if(!values.length){$("message").textContent="Aucune donnée à exporter.";return}const csv="round,multiplicateur\n"+values.map((v,i)=>(i+1)+","+v).join("\n");const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));const a=document.createElement("a");a.href=url;a.download="aviator-lens-historique.csv";a.click();URL.revokeObjectURL(url)});
+try{const saved=JSON.parse(localStorage.getItem("aviatorLensHistory")||"null");if(Array.isArray(saved)&&saved.length&&saved.every(v=>Number.isFinite(v)&&v>=1)){values=saved;$("mode").textContent="HISTORIQUE LOCAL";$("values").value=saved.join(", ")}}catch(e){}
 render();
 })();
 </script>
