@@ -73,7 +73,7 @@ function render(){
  if(!n){
   ["count"].forEach(id=>$(id).textContent="0");
   ["average","median","latest"].forEach(id=>$(id).textContent="—");
-  ["chart","frequencies","distribution","recent","trend","extras"].forEach(id=>$(id).innerHTML="");
+  ["chart","frequencies","distribution","recent","trend","extras"].forEach(id=>$(id).innerHTML="");$("viewValue").textContent="—";
   return;
  }
  const sorted=[...values].sort((a,b)=>a-b),sum=values.reduce((a,b)=>a+b,0);
