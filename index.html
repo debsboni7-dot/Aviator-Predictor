@@ -20,10 +20,20 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#09111d;border:1
 .table{width:100%;border-collapse:collapse;font-size:13px}.table td{padding:9px 3px;border-bottom:1px solid var(--line)}.table td:last-child{text-align:right;font-weight:700}
 .footer{color:var(--muted);font-size:11px;text-align:center;margin-top:22px}
 @media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.layout{grid-template-columns:1fr}.wrap{padding:17px 13px 36px}.metric b{font-size:23px}}
+
+.view-screen{display:none;min-height:calc(100vh - 92px);align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px 12px 100px}
+.view-screen.active{display:flex}
+.view-screen .eyebrow{font-size:12px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+.view-screen .value{font-size:clamp(58px,16vw,100px);font-weight:900;letter-spacing:-.07em;line-height:1.1;margin:16px 0;color:var(--cyan)}
+.view-screen .note{font-size:12px;color:var(--muted);max-width:290px}
+.bottom-nav{position:fixed;z-index:10;bottom:0;left:0;right:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:rgba(9,13,24,.94);border-top:1px solid var(--line);backdrop-filter:blur(12px);display:flex;justify-content:center}
+.bottom-nav button{width:min(100%,420px);font-size:15px}
+body.view-mode .wrap> :not(.view-screen):not(.bottom-nav){display:none!important}
+body.view-mode .view-screen{display:flex}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap">\n<main id="dashboard">
 <header class="top"><div class="brand"><div class="mark">A</div><div><strong>AVIATOR LENS</strong><small>Analyse statistique indépendante</small></div></div><div class="status" id="mode">MODE DÉMO</div></header>
 <h1>Les chiffres, pas les promesses.</h1>
 <p class="intro">Explore les multiplicateurs passés, leur répartition et leurs fréquences. Importe ton historique pour remplacer les données de démonstration.</p>
@@ -65,7 +75,7 @@ function render(){
  }
  const sorted=[...values].sort((a,b)=>a-b),sum=values.reduce((a,b)=>a+b,0);
  const med=n%2?sorted[(n-1)/2]:(sorted[n/2-1]+sorted[n/2])/2;
- const percentile=p=>sorted[Math.min(n-1,Math.ceil(p*n)-1)];
+ const percentile=p=>sorted[Math.min(n-1,Math.ceil(p*n)-1)];\n $("viewValue").textContent=fmt([...values.slice(-20)].sort((a,b)=>a-b).length%2 ? [...values.slice(-20)].sort((a,b)=>a-b)[Math.floor(Math.min(20,n)/2)] : ([...values.slice(-20)].sort((a,b)=>a-b)[Math.min(20,n)/2-1]+[...values.slice(-20)].sort((a,b)=>a-b)[Math.min(20,n)/2])/2);
  $("count").textContent=n;$("average").textContent=fmt(sum/n);$("median").textContent=fmt(med);$("latest").textContent=fmt(values[n-1]);
  const ranges=[{label:"1,00–1,49×",test:x=>x<1.5},{label:"1,50–1,99×",test:x=>x>=1.5&&x<2},{label:"2,00–4,99×",test:x=>x>=2&&x<5},{label:"5,00× et +",test:x=>x>=5}];
  const counts=ranges.map(r=>values.filter(r.test).length),max=Math.max(1,...counts);
@@ -91,7 +101,7 @@ function load(arr,source){
  try{localStorage.setItem("aviatorLensHistory",JSON.stringify(arr))}catch(e){}
  render();$("message").textContent=arr.length+" multiplicateur(s) chargé(s). Analyse descriptive uniquement.";
 }
-$("analyze").addEventListener("click",()=>load(parse($("values").value),"HISTORIQUE IMPORTÉ"));
+$("viewToggle").addEventListener("click",()=>{const active=document.body.classList.toggle("view-mode");$("viewToggle").textContent=active?"Accueil":"Voir";});\n$("analyze").addEventListener("click",()=>load(parse($("values").value),"HISTORIQUE IMPORTÉ"));
 $("demo").addEventListener("click",()=>{try{localStorage.removeItem("aviatorLensHistory")}catch(e){}load(demo.slice(),"MODE DÉMO")});
 $("clear").addEventListener("click",()=>{values=[];$("values").value="";$("mode").textContent="VIDE";try{localStorage.removeItem("aviatorLensHistory")}catch(e){}render();$("message").textContent="Historique effacé de ce navigateur."});
 $("file").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{$("values").value=await f.text();load(parse($("values").value),"FICHIER IMPORTÉ")}catch(err){$("message").textContent="Impossible de lire ce fichier."}e.target.value=""});
