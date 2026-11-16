@@ -111,9 +111,7 @@ $("analyze").addEventListener("click",()=>load(parse($("values").value),"HISTORI
 $("demo").addEventListener("click",()=>{try{localStorage.removeItem("aviatorLensHistory")}catch(e){}load(demo.slice(),"MODE DÉMO")});
 $("clear").addEventListener("click",()=>{values=[];$("values").value="";$("mode").textContent="VIDE";try{localStorage.removeItem("aviatorLensHistory")}catch(e){}render();$("message").textContent="Historique effacé de ce navigateur."});
 $("file").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{$("values").value=await f.text();load(parse($("values").value),"FICHIER IMPORTÉ")}catch(err){$("message").textContent="Impossible de lire ce fichier."}e.target.value=""});
-$("export").addEventListener("click",()=>{if(!values.length){$("message").textContent="Aucune donnée à exporter.";return}const csv="round,multiplicateur
-"+values.map((v,i)=>(i+1)+","+v).join("
-");const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));const a=document.createElement("a");a.href=url;a.download="aviator-lens-historique.csv";a.click();URL.revokeObjectURL(url)});
+$("export").addEventListener("click",()=>{if(!values.length){$("message").textContent="Aucune donnée à exporter.";return}const csv="round,multiplicateur\n"+values.map((v,i)=>(i+1)+","+v).join("\n");const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));const a=document.createElement("a");a.href=url;a.download="aviator-lens-historique.csv";a.click();URL.revokeObjectURL(url)});
 try{const saved=JSON.parse(localStorage.getItem("aviatorLensHistory")||"null");if(Array.isArray(saved)&&saved.length&&saved.every(v=>Number.isFinite(v)&&v>=1)){values=saved;$("mode").textContent="HISTORIQUE LOCAL";$("values").value=saved.join(", ")}}catch(e){}
 render();
 })();
